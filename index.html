@@ -68,7 +68,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
 <div class="chips" id="chips"></div>
 <form class="bar" id="f"><input id="t" placeholder="Type a question…" autocomplete="off"><button aria-label="Send">➤</button></form>
 </main>
-<dialog id="dlg"><form method="dialog" id="mf"><h3>Leave a message</h3><input id="mn" placeholder="Your name" required><input id="mc" placeholder="Email or phone" required>
+<dialog id="dlg"><form method="dialog" id="mf"><h3>Leave a message</h3><input id="mn" placeholder="Your name" required><input id="mc" placeholder="Your phone number or email" required>
 <textarea id="mb" rows="3" placeholder="Your message" required></textarea><div class="row"><button class="ib" value="x" formnovalidate>Cancel</button><button class="ib" id="ms" value="ok">Send</button></div></form></dialog>
 <script>
 const $=id=>document.getElementById(id),B=document.body,RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
@@ -118,6 +118,10 @@ $("orb").onclick=()=>{if(B.dataset.s==="speaking"){speechSynthesis.cancel();set(
  rec.onstart=()=>set("listening");rec.onresult=e=>{let s="";for(const r of e.results){s+=r[0].transcript;if(r.isFinal)fin=s}$("live").textContent=s};
  rec.onend=()=>{rec=null;if(fin)ask(fin);else{set("idle");$("live").textContent=""}};rec.onerror=()=>{};rec.start()};
 $("snd").onclick=()=>{snd=!snd;$("snd").textContent=snd?"🔊":"🔇";if(!snd){speechSynthesis.cancel();set("idle")}};
+fetch("/api/config").then(r=>r.json()).then(c=>{
+ const add=(txt,href)=>{const a=document.createElement("a");a.className="chip";a.textContent=txt;a.href=href;a.style.textDecoration="none";if(href.startsWith("http"))a.target="_blank";$("chips").prepend(a)};
+ const cb=document.createElement("button");cb.className="chip";cb.textContent="📲 Request a callback";cb.onclick=()=>{$("mb").value="Please call me back.";$("dlg").showModal()};$("chips").prepend(cb);
+ if(c.phone){add("💬 WhatsApp","https://wa.me/"+c.phone.replace("+",""));add("📞 Call "+(c.name||""),"tel:"+c.phone)}}).catch(()=>{});
 const th=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:light)").matches?"light":"dark");
 const applyTh=t=>{document.documentElement.dataset.theme=t;$("thm").textContent=t==="dark"?"🌙":"☀️";localStorage.setItem("th",t)};
 applyTh(th);$("thm").onclick=()=>applyTh(document.documentElement.dataset.theme==="dark"?"light":"dark");
