@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent dashboard</title>
+<style>
+:root{--bg:#0b0e1a;--card:#161b30;--line:#262d4d;--tx:#eef0ff;--mut:#8f97c2;--a:#7c8cff;--b:#c26bff;--bad:#ff7a8a;--ok:#3de0d0}
+[data-theme=light]{--bg:#f5f6ff;--card:#fff;--line:#dfe2f5;--tx:#171a33;--mut:#6a7096}
+*{box-sizing:border-box;margin:0}body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100dvh;padding:18px}
+body:before{content:"";position:fixed;width:55vmax;height:55vmax;border-radius:50%;background:var(--a);filter:blur(100px);opacity:.2;top:-28vmax;left:-18vmax;z-index:0;animation:d 16s ease-in-out infinite alternate}
+@keyframes d{to{transform:translate(10vmax,6vmax)}}main{position:relative;z-index:1;max-width:900px;margin:auto}
+header{display:flex;align-items:center;gap:10px;margin-bottom:16px}h1{font-size:1.15rem;flex:1}
+button,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;animation:pop .5s cubic-bezier(.2,1.2,.4,1) backwards}
+.stat:nth-child(2){animation-delay:.07s}.stat:nth-child(3){animation-delay:.14s}.stat:nth-child(4){animation-delay:.21s}
+.stat b{display:block;font-size:1.9rem;background:linear-gradient(135deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}.stat span{color:var(--mut);font-size:.8rem}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.95)}}
+.tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}.tabs button.on{background:linear-gradient(135deg,var(--a),var(--b));color:#fff;border:0}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;animation:pop .35s backwards}
+.item small{color:var(--mut)}.bad{border-left:4px solid var(--bad)}.ok{border-left:4px solid var(--ok)}.empty{color:var(--mut);padding:24px;text-align:center}
+#login{max-width:340px;margin:20vh auto;text-align:center;display:grid;gap:10px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body><main>
+<div id="login"><h2>🔐 Dashboard login</h2><input id="tk" type="password" placeholder="Admin token"><button id="go">Enter</button><small id="err" style="color:var(--bad)"></small></div>
+<div id="app" hidden><header><h1>🎙️ Agent dashboard</h1><small id="meta" style="color:var(--mut)"></small><button id="th">🌙</button><button id="rf">⟳</button></header>
+<div class="grid" id="stats"></div><div class="tabs" id="tabs"></div><div id="list"></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const when=x=>new Date(x*1000).toLocaleString();let D,tab="Unanswered";
+const views={
+ Unanswered:()=>D.logs.filter(l=>!l.known).map(l=>`<div class="item bad"><small>${when(l.ts)} · ${l.channel}</small><div>${esc(l.question)}</div></div>`),
+ Messages:()=>D.messages.map(m=>`<div class="item"><small>${when(m.ts)}</small><div><b>${esc(m.name)}</b> · ${esc(m.contact)}</div><div>${esc(m.body)}</div></div>`),
+ Conversations:()=>D.logs.map(l=>`<div class="item ${l.known?"ok":"bad"}"><small>${when(l.ts)} · ${l.channel}</small><div><b>Q:</b> ${esc(l.question)}</div><div><b>A:</b> ${esc(l.answer)}</div></div>`)};
+function draw(){const s=D.stats,un=D.logs.filter(l=>!l.known).length;
+ $("meta").textContent=D.model+(D.llm_enabled?"":" (demo mode)");
+ $("stats").innerHTML=[[s.total,"Questions"],[s.answer_rate+"%","Answer rate"],[un,"Unanswered"],[s.phone,"Phone calls"]].map(x=>`<div class="stat"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+ $("tabs").innerHTML=Object.keys(views).map(k=>`<button class="${k===tab?"on":""}" data-k="${k}">${k}</button>`).join("");
+ $("tabs").onclick=e=>{if(e.target.dataset.k){tab=e.target.dataset.k;draw()}};
+ const rows=views[tab]();$("list").innerHTML=rows.length?rows.join(""):'<div class="empty">Nothing here yet 🎉</div>'}
+async function load(){const r=await fetch("/api/admin/data",{headers:{"x-token":sessionStorage.t||""}});
+ if(!r.ok){sessionStorage.removeItem("t");$("login").hidden=false;$("app").hidden=true;$("err").textContent=sessionStorage.t===undefined&&$("tk").value?"Wrong token":"";return}
+ D=await r.json();$("login").hidden=true;$("app").hidden=false;draw()}
+$("go").onclick=()=>{sessionStorage.t=$("tk").value;load()};$("tk").onkeydown=e=>e.key==="Enter"&&$("go").click();$("rf").onclick=load;
+const at=t=>{document.documentElement.dataset.theme=t;$("th").textContent=t==="dark"?"🌙":"☀️";localStorage.setItem("th",t)};
+at(localStorage.th||"dark");$("th").onclick=()=>at(document.documentElement.dataset.theme==="dark"?"light":"dark");
+if(sessionStorage.t)load();
+</script></main></body></html>

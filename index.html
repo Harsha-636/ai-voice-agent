@@ -1,0 +1,125 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Talk to my AI</title>
+<style>
+:root{--bg:#0b0e1a;--card:#161b30;--line:#262d4d;--tx:#eef0ff;--mut:#8f97c2;--a:#7c8cff;--b:#c26bff;--c:#3de0d0}
+[data-theme=light]{--bg:#f5f6ff;--card:#fff;--line:#dfe2f5;--tx:#171a33;--mut:#6a7096}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--tx);height:100dvh;overflow:hidden;transition:background .4s}
+body:before,body:after{content:"";position:fixed;width:60vmax;height:60vmax;border-radius:50%;filter:blur(90px);opacity:.25;z-index:0;animation:drift 18s ease-in-out infinite alternate}
+body:before{background:var(--a);top:-30vmax;left:-20vmax}body:after{background:var(--b);bottom:-35vmax;right:-20vmax;animation-delay:-9s}
+@keyframes drift{to{transform:translate(8vmax,6vmax) scale(1.15)}}
+main{position:relative;z-index:1;max-width:680px;height:100%;margin:auto;padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+header{display:flex;align-items:center;gap:8px}header h1{font-size:1rem;flex:1;font-weight:650}
+select,.ib{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:.85rem;cursor:pointer}
+.vb{display:flex;gap:8px;align-items:center}.vb select{flex:1;min-width:0}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none}
+.seg button{border:0;background:var(--card);color:var(--tx);padding:7px 12px;font-size:.85rem;cursor:pointer;transition:.25s}
+.seg button.on{background:linear-gradient(135deg,var(--a),var(--b));color:#fff}
+/* orb */
+.stage{display:grid;place-items:center;height:190px;position:relative;flex:none}
+.orb{width:104px;height:104px;border-radius:50%;border:0;cursor:pointer;position:relative;z-index:2;
+ background:conic-gradient(from 0deg,var(--a),var(--b),var(--c),var(--a));box-shadow:0 0 50px color-mix(in srgb,var(--a) 60%,transparent);
+ animation:breathe 4s ease-in-out infinite,spin 9s linear infinite;transition:transform .3s}
+.orb:active{transform:scale(.94)}.orb:after{content:"🎤";position:absolute;inset:0;display:grid;place-items:center;font-size:30px;animation:unspin 9s linear infinite}
+.ring{position:absolute;width:104px;height:104px;border-radius:50%;border:2px solid var(--a);opacity:0}
+[data-s=listening] .ring{animation:ripple 1.8s ease-out infinite}[data-s=listening] .ring:nth-child(2){animation-delay:.6s}[data-s=listening] .ring:nth-child(3){animation-delay:1.2s}
+[data-s=listening] .orb{background:conic-gradient(from 0deg,#ff5d73,var(--b),#ff9f5d,#ff5d73);animation:breathe 1s ease-in-out infinite,spin 4s linear infinite}
+[data-s=thinking] .orb{animation:breathe 1.2s ease-in-out infinite,spin 1.2s linear infinite}
+[data-s=speaking] .orb{animation:breathe .7s ease-in-out infinite,spin 6s linear infinite}
+.orb:after{animation-name:unspin}
+@keyframes breathe{50%{transform:scale(1.07)}}@keyframes spin{to{rotate:360deg}}@keyframes unspin{to{rotate:-360deg}}
+@keyframes ripple{from{transform:scale(1);opacity:.7}to{transform:scale(2.3);opacity:0}}
+.wave{position:absolute;bottom:22px;display:flex;gap:4px;height:22px;align-items:center;opacity:0;transition:opacity .3s}
+[data-s=speaking] .wave{opacity:1}.wave i{width:4px;border-radius:3px;background:linear-gradient(var(--a),var(--c));height:6px;animation:bar .8s ease-in-out infinite}
+.wave i:nth-child(2n){animation-delay:-.3s}.wave i:nth-child(3n){animation-delay:-.55s}.wave i:nth-child(4n){animation-delay:-.15s}
+@keyframes bar{50%{height:22px}}
+#status{position:absolute;bottom:0;font-size:.82rem;color:var(--mut);transition:color .3s}
+#live{min-height:20px;text-align:center;font-size:.9rem;color:var(--mut);font-style:italic}
+/* chat */
+#log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px;scroll-behavior:smooth;mask-image:linear-gradient(transparent,#000 14px)}
+.m{padding:10px 14px;border-radius:16px;max-width:86%;background:var(--card);border:1px solid var(--line);line-height:1.4;animation:pop .35s cubic-bezier(.2,1.2,.4,1)}
+.m.u{align-self:flex-end;background:linear-gradient(135deg,var(--a),var(--b));color:#fff;border:0}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.96)}}
+.dots{display:flex;gap:5px;padding:14px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--mut);animation:dot 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}@keyframes dot{40%{transform:translateY(-6px);background:var(--a)}}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{flex:none;font-size:.8rem;padding:7px 12px;border-radius:99px;background:var(--card);border:1px solid var(--line);cursor:pointer;color:var(--tx);transition:.2s}
+.chip:hover{border-color:var(--a);transform:translateY(-2px)}
+.bar{display:flex;gap:8px}.bar input{flex:1;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:1rem;outline:0;transition:.2s}
+.bar input:focus{border-color:var(--a);box-shadow:0 0 0 3px color-mix(in srgb,var(--a) 25%,transparent)}
+.bar button{border:0;border-radius:14px;padding:0 18px;background:linear-gradient(135deg,var(--a),var(--b));color:#fff;font-size:1.1rem;cursor:pointer;transition:.2s}.bar button:active{transform:scale(.92)}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--tx);padding:20px;width:min(380px,92vw);margin:auto}
+dialog::backdrop{background:#0008;backdrop-filter:blur(4px)}dialog[open]{animation:pop .3s}
+dialog input,dialog textarea{width:100%;margin:6px 0;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--tx);font:inherit}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head>
+<body data-s="idle"><main>
+<header><h1>🎙️ Talk to my AI</h1>
+<select id="lang"><option value="en-IN">English</option><option value="hi-IN">हिन्दी</option><option value="te-IN">తెలుగు</option></select>
+<button class="ib" id="snd" title="Voice replies">🔊</button><button class="ib" id="thm" title="Theme">🌙</button></header>
+<div class="vb"><div class="seg"><button id="gf" data-g="f">👩 Female</button><button id="gm" data-g="m">👨 Male</button></div><select id="vsel" title="Voice"></select></div>
+<div class="stage"><span class="ring"></span><span class="ring"></span><span class="ring"></span>
+<button class="orb" id="orb" aria-label="Tap to talk"></button>
+<div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div id="status">Tap the orb and ask me anything</div></div>
+<div id="live"></div>
+<div id="log" aria-live="polite"></div>
+<div class="chips" id="chips"></div>
+<form class="bar" id="f"><input id="t" placeholder="Type a question…" autocomplete="off"><button aria-label="Send">➤</button></form>
+</main>
+<dialog id="dlg"><form method="dialog" id="mf"><h3>Leave a message</h3><input id="mn" placeholder="Your name" required><input id="mc" placeholder="Email or phone" required>
+<textarea id="mb" rows="3" placeholder="Your message" required></textarea><div class="row"><button class="ib" value="x" formnovalidate>Cancel</button><button class="ib" id="ms" value="ok">Send</button></div></form></dialog>
+<script>
+const $=id=>document.getElementById(id),B=document.body,RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
+let hist=[],snd=true,rec,busy=false;
+const ST={idle:"Tap the orb and ask me anything",listening:"Listening…",thinking:"Thinking…",speaking:"Speaking… tap to stop"};
+const set=s=>{B.dataset.s=s;$("status").textContent=ST[s]};
+const scroll=()=>$("log").scrollTop=1e9;
+function bubble(t,c){const d=document.createElement("div");d.className="m "+c;d.textContent=t;$("log").append(d);scroll();return d}
+function type(el,text){if(RM){el.textContent=text;return}const w=text.split(" ");el.textContent="";let i=0;
+ const iv=setInterval(()=>{el.textContent+=(i?" ":"")+w[i++];scroll();if(i>=w.length)clearInterval(iv)},45)}
+["Who are you?","What are your skills?","Tell me about your projects","How can I contact you?","Are you available for hire?"].forEach(q=>{
+ const c=document.createElement("button");c.className="chip";c.textContent=q;c.onclick=()=>ask(q);$("chips").append(c)});
+const FEM=/zira|samantha|hazel|susan|heera|swara|neerja|kalpana|shruti|aria|jenny|karen|moira|tessa|veena|priya|female|fiona|victoria|allison|ava|serena|kate|sara|chitra|lekha|हिन्दी|हिंदी/i;
+const MAL=/david|mark|daniel|alex|ravi|hemant|prabhat|guy|fred|rishi|tom|male|james|george|mohan|madhur|ryan|eric|rocko/i;
+const gOf=v=>FEM.test(v.name)?"f":MAL.test(v.name)?"m":null;
+let gen=localStorage.getItem("g")||"f",vName=localStorage.getItem("v")||"",VL=[];
+function voices(){const all=speechSynthesis.getVoices(),p=$("lang").value.slice(0,2),m=all.filter(v=>v.lang.toLowerCase().startsWith(p));return m.length?m:all}
+function curVoice(){const l=VL.length?VL:voices();const sel=l.find(v=>v.name===vName&&(gOf(v)||gen)===(gOf(v)||gen));
+ const pool=l.filter(v=>gOf(v)===gen);return (sel&&(!gOf(sel)||gOf(sel)===gen)&&sel)||pool[0]||l.find(v=>!gOf(v))||l[0]}
+function drawVoices(){if(!window.speechSynthesis)return;VL=voices();const cv=curVoice();
+ $("vsel").innerHTML=VL.map(v=>`<option value="${v.name.replace(/"/g,"&quot;")}">${v.name}${gOf(v)?" ("+(gOf(v)==="f"?"female":"male")+")":""}</option>`).join("");
+ if(cv)$("vsel").value=cv.name;$("gf").classList.toggle("on",gen==="f");$("gm").classList.toggle("on",gen==="m")}
+function preview(){speak("Hello! This is how I sound.")}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{gen=b.dataset.g;vName="";localStorage.setItem("g",gen);localStorage.removeItem("v");drawVoices();preview()});
+$("vsel").onchange=()=>{vName=$("vsel").value;localStorage.setItem("v",vName);const v=VL.find(x=>x.name===vName);if(v&&gOf(v)){gen=gOf(v);localStorage.setItem("g",gen)}drawVoices();preview()};
+$("lang").onchange=()=>{vName="";drawVoices()};
+if(window.speechSynthesis){speechSynthesis.onvoiceschanged=drawVoices;drawVoices()}else $("vsel").style.display="none";
+function speak(t){if(!snd||!window.speechSynthesis){set("idle");return}speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(t),v=curVoice();u.lang=$("lang").value;
+ if(v){u.voice=v;u.lang=v.lang}u.pitch=v&&gOf(v)===gen?1:(gen==="f"?1.35:.7);   // no matching voice installed: shift pitch instead
+ u.onstart=()=>set("speaking");u.onend=u.onerror=()=>set("idle");speechSynthesis.speak(u)}
+async function ask(q){q=q.trim();if(!q||busy)return;busy=true;speechSynthesis.cancel();$("t").value="";$("live").textContent="";
+ bubble(q,"u");const dots=document.createElement("div");dots.className="m dots";dots.innerHTML="<i></i><i></i><i></i>";$("log").append(dots);scroll();set("thinking");
+ try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,history:hist.slice(-8)})});
+  if(!r.ok)throw new Error((await r.json()).detail||r.status);const d=await r.json();dots.remove();
+  hist.push({role:"user",content:q},{role:"assistant",content:d.answer});type(bubble("","a"),d.answer);speak(d.answer);if(!d.known)offer()}
+ catch(e){dots.remove();bubble("Sorry, something went wrong: "+e.message,"a");set("idle")}busy=false}
+function offer(){const c=document.createElement("button");c.className="chip";c.textContent="✉️ Leave a message";c.style.alignSelf="flex-start";
+ c.onclick=()=>{$("dlg").showModal()};$("log").append(c);scroll()}
+$("mf").onsubmit=async e=>{if(e.submitter?.value!=="ok")return;await fetch("/api/message",{method:"POST",headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({name:$("mn").value,contact:$("mc").value,body:$("mb").value})});$("mf").reset();bubble("✅ Message delivered. Thank you!","a")};
+$("f").onsubmit=e=>{e.preventDefault();ask($("t").value)};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+$("orb").onclick=()=>{if(B.dataset.s==="speaking"){speechSynthesis.cancel();set("idle");return}
+ if(!SR){bubble("Voice input needs Chrome or Edge. You can still type.","a");return}
+ if(rec){rec.stop();return}rec=new SR();rec.lang=$("lang").value;rec.interimResults=true;let fin="";
+ rec.onstart=()=>set("listening");rec.onresult=e=>{let s="";for(const r of e.results){s+=r[0].transcript;if(r.isFinal)fin=s}$("live").textContent=s};
+ rec.onend=()=>{rec=null;if(fin)ask(fin);else{set("idle");$("live").textContent=""}};rec.onerror=()=>{};rec.start()};
+$("snd").onclick=()=>{snd=!snd;$("snd").textContent=snd?"🔊":"🔇";if(!snd){speechSynthesis.cancel();set("idle")}};
+const th=localStorage.getItem("th")||(matchMedia("(prefers-color-scheme:light)").matches?"light":"dark");
+const applyTh=t=>{document.documentElement.dataset.theme=t;$("thm").textContent=t==="dark"?"🌙":"☀️";localStorage.setItem("th",t)};
+applyTh(th);$("thm").onclick=()=>applyTh(document.documentElement.dataset.theme==="dark"?"light":"dark");
+bubble("Hi! I'm an AI assistant that answers on behalf of the owner of this page. Tap the orb and ask me anything.","a");
+</script></body></html>
