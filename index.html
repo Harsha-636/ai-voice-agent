@@ -78,7 +78,7 @@ const set=s=>{B.dataset.s=s;$("status").textContent=ST[s]};
 const scroll=()=>$("log").scrollTop=1e9;
 function bubble(t,c){const d=document.createElement("div");d.className="m "+c;d.textContent=t;$("log").append(d);scroll();return d}
 function type(el,text){if(RM){el.textContent=text;return}const w=text.split(" ");el.textContent="";let i=0;
- const iv=setInterval(()=>{el.textContent+=(i?" ":"")+w[i++];scroll();if(i>=w.length)clearInterval(iv)},45)}
+ const iv=setInterval(()=>{el.textContent+=(i?" ":"")+w[i++];scroll();if(i>=w.length)clearInterval(iv)},Math.max(14,Math.min(45,3500/w.length)))}
 ["Who are you?","What are your skills?","Tell me about your projects","How can I contact you?","Are you available for hire?"].forEach(q=>{
  const c=document.createElement("button");c.className="chip";c.textContent=q;c.onclick=()=>ask(q);$("chips").append(c)});
 const FEM=/zira|samantha|hazel|susan|heera|swara|neerja|kalpana|shruti|aria|jenny|karen|moira|tessa|veena|priya|female|fiona|victoria|allison|ava|serena|kate|sara|chitra|lekha|हिन्दी|हिंदी/i;
