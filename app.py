@@ -35,9 +35,10 @@ def expand(q):
     w = [x for x in tok(q) if x not in STOP]
     return " ".join(w) + " " + " ".join(SYN[x] for x in tok(q) if x in SYN)
 
-KDIR = Path(os.getenv("KNOWLEDGE_DIR", BASE / "knowledge"))
+STATIC = BASE / "static" if (BASE / "static").is_dir() else BASE   # works with or without folders
+KDIR = Path(os.getenv("KNOWLEDGE_DIR") or (BASE / "knowledge" if (BASE / "knowledge").is_dir() else BASE))
 chunks = []
-for f in sorted(KDIR.glob("*.md")):
+for f in sorted(KDIR.glob("about_me*.md" if KDIR == BASE else "*.md")):
     for part in re.split(r"\n(?=#)|\n\n", f.read_text(encoding="utf-8")):
         if part.strip():
             tf = Counter(tok(part)); g = grams(part)
@@ -155,7 +156,7 @@ async def admin(x_token: str = Header("")):
 async def health(): return {"status": "ok", "chunks": len(chunks), "llm": bool(KEY)}
 
 @app.get("/")
-async def index(): return FileResponse(BASE / "static/index.html")
+async def index(): return FileResponse(STATIC / "index.html")
 @app.get("/admin")
-async def adm(): return FileResponse(BASE / "static/admin.html")
-app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
+async def adm(): return FileResponse(STATIC / "admin.html")
+if (BASE / "static").is_dir(): app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
